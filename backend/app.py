@@ -1,8 +1,10 @@
+import os
 import pandas as pd
 import pickle
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
 app = FastAPI()
 
@@ -18,6 +20,7 @@ app.add_middleware(
 model = pickle.load(open("model.pkl", "rb"))
 scaler = pickle.load(open("scaler.pkl", "rb"))
 
+# Define input schema
 class LoanApplication(BaseModel):
     Gender: int
     Married: int
@@ -38,3 +41,10 @@ def predict_loan(application: LoanApplication):
     prediction = model.predict(df_scaled)[0]
     status = "Approved" if prediction == 1 else "Rejected"
     return {"loan_status": status}
+
+# -----------------------------
+# For local dev or Render deployment
+# -----------------------------
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))  # Use Render's dynamic PORT
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
