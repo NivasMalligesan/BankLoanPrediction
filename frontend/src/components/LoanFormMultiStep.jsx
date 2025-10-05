@@ -52,7 +52,7 @@ const LoanFormMultiStep = () => {
 
   const handleSubmit = async () => {
     try {
-      const res = await axios.post("http://127.0.0.1:8000/predict", formData);
+      const res = await axios.post("https://bankloanpredictionbackend.onrender.com/predict", formData);
       setResult(res.data.loan_status);
       setSubmitted(true); 
     } catch (err) {
