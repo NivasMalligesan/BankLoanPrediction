@@ -8,7 +8,7 @@ import uvicorn
 
 app = FastAPI()
 
-# Allow frontend
+# Allow frontend requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,11 +16,16 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# Load model and scaler
+# Load ML model and scaler
 model = pickle.load(open("model.pkl", "rb"))
 scaler = pickle.load(open("scaler.pkl", "rb"))
 
-# Define input schema
+# Health check route
+@app.get("/")
+def root():
+    return {"message": "Bank Loan Prediction API is running"}
+
+# Request body structure
 class LoanApplication(BaseModel):
     Gender: int
     Married: int
@@ -37,14 +42,12 @@ class LoanApplication(BaseModel):
 @app.post("/predict")
 def predict_loan(application: LoanApplication):
     df = pd.DataFrame([application.dict()])
-    df_scaled = scaler.transform(df)  # scale features
+    df_scaled = scaler.transform(df)
     prediction = model.predict(df_scaled)[0]
     status = "Approved" if prediction == 1 else "Rejected"
     return {"loan_status": status}
 
-# -----------------------------
-# For local dev or Render deployment
-# -----------------------------
+# Use Render port
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))  # Use Render's dynamic PORT
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
